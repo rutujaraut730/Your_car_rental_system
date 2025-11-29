@@ -1,0 +1,471 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <!-- Header -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="section-title">Admin Dashboard</h1>
+                <p class="text-muted fs-5">Manage your car rental platform efficiently</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card bg-primary text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-white">{{ users|length }}</div>
+                        <div>Total Users</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card bg-success text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-car fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-white">{{ cars|length }}</div>
+                        <div>Total Cars</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card bg-warning text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-id-card fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-white">{{ drivers|length }}</div>
+                        <div>Total Drivers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card bg-info text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-calendar-check fa-2x"></i>
+                    </div>
+                    <div>
+                        <div class="stat-number text-white">{{ bookings|length }}</div>
+                        <div>Total Bookings</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Management -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="admin-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-users me-2 text-primary"></i>
+                    Users Management
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td><strong>#{{ user.id }}</strong></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle me-2 text-muted"></i>
+                                        {{ user.username }}
+                                    </div>
+                                </td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'client' %}bg-warning{% else %}bg-primary{% endif %} fs-6">
+                                        <i class="fas fa-{% if user.role == 'admin' %}crown{% elif user.role == 'client' %}car{% else %}user{% endif %} me-1"></i>
+                                        {{ user.role|title }}
+                                    </span>
+                                </td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    {% if user.role != 'admin' or user.id != current_user.id %}
+                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('user', {{ user.id }}, '{{ user.username }}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                    {% else %}
+                                    <span class="text-muted">Protected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cars Management -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="admin-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-car me-2 text-primary"></i>
+                    Cars Management
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Vehicle</th>
+                                <th>Year</th>
+                                <th>Price/Day</th>
+                                <th>Owner</th>
+                                <th>Status</th>
+                                <th>Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for car in cars %}
+                            <tr>
+                                <td><strong>#{{ car.id }}</strong></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if car.image %}
+                                        <img src="{{ url_for('static', filename='uploads/' + car.image) }}" 
+                                             class="rounded me-3" width="40" height="40" style="object-fit: cover;">
+                                        {% else %}
+                                        <i class="fas fa-car me-3 text-muted"></i>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-semibold">{{ car.brand }} {{ car.model }}</div>
+                                            <small class="text-muted">{{ car.transmission }} • {{ car.fuel_type }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ car.year }}</td>
+                                <td><strong class="text-success">${{ car.price_per_day }}</strong></td>
+                                <td>{{ car.client.username }}</td>
+                                <td>
+                                    {% if car.available %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check me-1"></i>Available
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-times me-1"></i>Rented
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ car.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('car', {{ car.id }}, '{{ car.brand }} {{ car.model }}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings Management -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="admin-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-calendar-check me-2 text-primary"></i>
+                    Bookings Management
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Vehicle</th>
+                                <th>Rental Period</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Booked</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td><strong>#{{ booking.id }}</strong></td>
+                                <td>{{ booking.user.username }}</td>
+                                <td>{{ booking.car.brand }} {{ booking.car.model }}</td>
+                                <td>
+                                    <small>
+                                        {{ booking.start_date.strftime('%m/%d/%Y') }}<br>
+                                        to {{ booking.end_date.strftime('%m/%d/%Y') }}
+                                    </small>
+                                </td>
+                                <td><strong class="text-success">${{ booking.total_price }}</strong></td>
+                                <td>
+                                    <span class="badge 
+                                        {% if booking.status == 'confirmed' %}bg-success
+                                        {% elif booking.status == 'pending' %}bg-warning
+                                        {% elif booking.status == 'completed' %}bg-info
+                                        {% else %}bg-danger{% endif %} fs-6">
+                                        <i class="fas fa-{% if booking.status == 'confirmed' %}check-circle
+                                        {% elif booking.status == 'pending' %}clock
+                                        {% elif booking.status == 'completed' %}flag-checkered
+                                        {% else %}times-circle{% endif %} me-1"></i>
+                                        {{ booking.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ booking.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('booking', {{ booking.id }}, 'Booking #{{ booking.id }}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drivers Management -->
+    <div class="row">
+        <div class="col-12">
+            <div class="admin-card">
+                <h4 class="fw-bold mb-4">
+                    <i class="fas fa-id-card me-2 text-primary"></i>
+                    Drivers Management
+                </h4>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>License</th>
+                                <th>Experience</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for driver in drivers %}
+                            <tr>
+                                <td><strong>#{{ driver.id }}</strong></td>
+                                <td>{{ driver.name }}</td>
+                                <td>{{ driver.license_number }}</td>
+                                <td>{{ driver.experience }} years</td>
+                                <td>{{ driver.phone }}</td>
+                                <td>
+                                    {% if driver.available %}
+                                    <span class="badge bg-success fs-6">
+                                        <i class="fas fa-check me-1"></i>Available
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger fs-6">
+                                        <i class="fas fa-times me-1"></i>Busy
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ driver.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('driver', {{ driver.id }}, '{{ driver.name }}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="deleteItemName"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone!</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add this to your admin.html template -->
+<!-- Driver Assignments Section in admin.html -->
+<div class="card mt-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Driver Assignments</h5>
+    </div>
+    <div class="card-body">
+        {% if bookings %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Customer</th>
+                            <th>Driver</th>
+                            <th>Car</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Total Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td><strong>#{{ booking.id }}</strong></td>
+                            <td>{{ booking.user.username }}</td>
+                            <td>
+                                {% if booking.driver %}
+                                    <strong>{{ booking.driver.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ booking.driver.license_number }}</small>
+                                {% else %}
+                                    <span class="text-muted">No driver</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ booking.car.brand }} {{ booking.car.model }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if booking.status == 'confirmed' else 'warning' if booking.status == 'pending' else 'info' if booking.status == 'completed' else 'danger' }}">
+                                    {{ booking.status }}
+                                </span>
+                            </td>
+                            <td>{{ booking.start_date.strftime('%Y-%m-%d') }}</td>
+                            <td>${{ "%.2f"|format(booking.total_price) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-car fa-2x text-muted mb-3"></i>
+                <p class="text-muted">No bookings found</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+<script>
+let currentDeleteType = '';
+let currentDeleteId = 0;
+
+function confirmDelete(type, id, name) {
+    currentDeleteType = type;
+    currentDeleteId = id;
+    
+    const itemNames = {
+        'user': 'User',
+        'car': 'Car', 
+        'booking': 'Booking',
+        'driver': 'Driver'
+    };
+    
+    document.getElementById('deleteItemName').textContent = `${itemNames[type]}: ${name}`;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    const deleteUrl = `/delete_${currentDeleteType}/${currentDeleteId}`;
+    window.location.href = deleteUrl;
+});
+</script>
+
+<style>
+.admin-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+    border-left: 4px solid var(--primary);
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--dark);
+    background: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 15px 8px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(37, 99, 235, 0.05);
+    transform: translateX(5px);
+    transition: all 0.3s ease;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+    border-radius: 8px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: transform 0.3s ease;
+    border-left: 4px solid;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+</style>
+{% endblock %}

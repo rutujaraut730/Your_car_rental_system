@@ -1,0 +1,646 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="text-center mb-5">
+                <h1 class="section-title">Book Your Dream Car</h1>
+                <p class="text-muted">Choose from our premium collection of vehicles</p>
+            </div>
+            
+            <!-- Booking Progress -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="booking-progress">
+                        <div class="progress-step active">
+                            <div class="step-number">1</div>
+                            <div class="step-label">Select Car</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-number">2</div>
+                            <div class="step-label">Choose Dates</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-number">3</div>
+                            <div class="step-label">Add Driver</div>
+                        </div>
+                        <div class="progress-step">
+                            <div class="step-number">4</div>
+                            <div class="step-label">Confirm</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('book_car') }}" id="bookingForm">
+                        <!-- Step 1: Car Selection -->
+                        <div class="booking-step active" id="step1">
+                            <h4 class="fw-bold mb-4 text-primary">
+                                <i class="fas fa-car me-2"></i>Select Your Car
+                            </h4>
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <label for="car_id" class="form-label fw-semibold">Choose a Vehicle *</label>
+                                    <select class="form-select form-select-lg border-2" id="car_id" name="car_id" required 
+                                            style="background: #f8f9fa; border-radius: 10px;">
+                                        <option value="">Select your preferred car...</option>
+                                        {% for car in cars %}
+                                        <option value="{{ car.id }}" data-price="{{ car.price_per_day }}" 
+                                                data-seats="{{ car.seats }}" data-fuel="{{ car.fuel_type }}"
+                                                data-transmission="{{ car.transmission }}">
+                                            {{ car.brand }} {{ car.model }} ({{ car.year }}) - ${{ car.price_per_day }}/day
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Car Details Preview -->
+                            <div class="card bg-light border-0 mt-4" id="carPreview" style="display: none;">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h5 id="previewCarName" class="fw-bold mb-2"></h5>
+                                            <div class="row text-muted small">
+                                                <div class="col-4">
+                                                    <i class="fas fa-users me-1"></i>
+                                                    <span id="previewSeats"></span> seats
+                                                </div>
+                                                <div class="col-4">
+                                                    <i class="fas fa-gas-pump me-1"></i>
+                                                    <span id="previewFuel"></span>
+                                                </div>
+                                                <div class="col-4">
+                                                    <i class="fas fa-cog me-1"></i>
+                                                    <span id="previewTransmission"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <h4 id="previewPrice" class="text-primary mb-0"></h4>
+                                            <small class="text-muted">per day</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end mt-4">
+                                <button type="button" class="btn btn-primary btn-lg px-5" onclick="nextStep(2)">
+                                    Next <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Date Selection -->
+                        <div class="booking-step" id="step2">
+                            <h4 class="fw-bold mb-4 text-primary">
+                                <i class="fas fa-calendar-alt me-2"></i>Choose Rental Dates
+                            </h4>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="start_date" class="form-label fw-semibold">Pick-up Date *</label>
+                                    <input type="date" class="form-control form-control-lg border-2" 
+                                           id="start_date" name="start_date" required 
+                                           style="background: #f8f9fa; border-radius: 10px;">
+                                    <div class="form-text">Earliest pickup: Today</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="end_date" class="form-label fw-semibold">Return Date *</label>
+                                    <input type="date" class="form-control form-control-lg border-2" 
+                                           id="end_date" name="end_date" required 
+                                           style="background: #f8f9fa; border-radius: 10px;">
+                                    <div class="form-text">Minimum rental: 1 day</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="pickup_location" class="form-label fw-semibold">Pick-up Location *</label>
+                                <input type="text" class="form-control form-control-lg border-2" 
+                                       id="pickup_location" name="pickup_location" 
+                                       placeholder="Enter pickup address or choose from below" required 
+                                       style="background: #f8f9fa; border-radius: 10px;">
+                                
+                                <!-- Quick Location Options -->
+                                <div class="mt-2">
+                                    <small class="text-muted me-3">Quick select:</small>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                                            onclick="setLocation('Downtown Office')">Downtown</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-2" 
+                                            onclick="setLocation('Airport Terminal')">Airport</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="setLocation('Train Station')">Train Station</button>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="prevStep(1)">
+                                    <i class="fas fa-arrow-left me-2"></i>Back
+                                </button>
+                                <button type="button" class="btn btn-primary btn-lg px-5" onclick="nextStep(3)">
+                                    Next <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Driver Selection -->
+                        <div class="booking-step" id="step3">
+                            <h4 class="fw-bold mb-4 text-primary">
+                                <i class="fas fa-id-card me-2"></i>Driver Options
+                            </h4>
+                            
+                            <div class="mb-4">
+                                <label for="driver_id" class="form-label fw-semibold">Need a Driver?</label>
+                                <select class="form-select form-select-lg border-2" id="driver_id" name="driver_id" 
+                                        style="background: #f8f9fa; border-radius: 10px;">
+                                    <option value="">I'll drive myself</option>
+                                    {% for driver in drivers %}
+                                    <option value="{{ driver.id }}" data-experience="{{ driver.experience }}">
+                                        {{ driver.name }} ({{ driver.experience }} years experience) - +$50/day
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Professional drivers available for an additional $50 per day</div>
+                            </div>
+
+                            <!-- Driver Details -->
+                            <div class="card bg-light border-0 mt-4" id="driverPreview" style="display: none;">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 id="previewDriverName" class="fw-bold mb-1"></h6>
+                                            <p class="text-muted mb-0" id="previewDriverExp"></p>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <span class="text-success fw-semibold">+$50/day</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="prevStep(2)">
+                                    <i class="fas fa-arrow-left me-2"></i>Back
+                                </button>
+                                <button type="button" class="btn btn-primary btn-lg px-5" onclick="nextStep(4)">
+                                    Next <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Confirmation -->
+                        <div class="booking-step" id="step4">
+                            <h4 class="fw-bold mb-4 text-primary">
+                                <i class="fas fa-clipboard-check me-2"></i>Confirm Booking
+                            </h4>
+                            
+                            <!-- Booking Summary -->
+                            <div class="card bg-gradient-primary text-white border-0 mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-4">
+                                        <i class="fas fa-receipt me-2"></i>Booking Summary
+                                    </h5>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <strong>Vehicle:</strong>
+                                        </div>
+                                        <div class="col-6 text-end" id="summaryCar"></div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <strong>Rental Period:</strong>
+                                        </div>
+                                        <div class="col-6 text-end" id="summaryDates"></div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <strong>Pickup Location:</strong>
+                                        </div>
+                                        <div class="col-6 text-end" id="summaryLocation"></div>
+                                    </div>
+                                    
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <strong>Driver:</strong>
+                                        </div>
+                                        <div class="col-6 text-end" id="summaryDriver"></div>
+                                    </div>
+                                    
+                                    <hr style="border-color: rgba(255,255,255,0.3);">
+                                    
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <h5 class="mb-0">Total:</h5>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <h3 class="mb-0" id="summaryTotal">$0.00</h3>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Terms and Conditions -->
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="bookingTerms" required>
+                                    <label class="form-check-label text-muted" for="bookingTerms">
+                                        I agree to the <a href="#" class="text-primary text-decoration-none">rental terms and conditions</a> 
+                                        and understand that I am responsible for any damages or violations during the rental period.
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="prevStep(3)">
+                                    <i class="fas fa-arrow-left me-2"></i>Back
+                                </button>
+                                <button type="submit" class="btn btn-success btn-lg px-5" id="confirmBookingBtn">
+                                    <i class="fas fa-lock me-2"></i>Confirm Booking
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Cars Gallery -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="section-title text-center mb-5">Available Cars</h3>
+        </div>
+        {% for car in cars %}
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+            <div class="car-card h-100">
+                <div class="position-relative overflow-hidden">
+                    {% if car.image %}
+                    <img src="{{ url_for('static', filename='uploads/' + car.image) }}" 
+                         class="card-img-top" alt="{{ car.brand }} {{ car.model }}" 
+                         style="height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+                         class="card-img-top" alt="Car Image" style="height: 200px; object-fit: cover; transition: transform 0.3s ease;">
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 m-3">
+                        <span class="badge bg-success fs-6">Available</span>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="card-title fw-bold mb-1">{{ car.brand }} {{ car.model }}</h6>
+                            <small class="text-muted">{{ car.year }} • {{ car.transmission }}</small>
+                        </div>
+                        <h5 class="text-primary mb-0">${{ car.price_per_day }}</h5>
+                    </div>
+                    
+                    <div class="row g-1 mb-3">
+                        <div class="col-6">
+                            <small class="text-muted"><i class="fas fa-users me-1"></i>{{ car.seats }} seats</small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted"><i class="fas fa-gas-pump me-1"></i>{{ car.fuel_type }}</small>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary mt-auto" onclick="selectCar({{ car.id }})">
+                        <i class="fas fa-check me-1"></i>Select This Car
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+let currentStep = 1;
+let selectedCarId = null;
+
+function selectCar(carId) {
+    selectedCarId = carId;
+    document.getElementById('car_id').value = carId;
+    
+    // Trigger change event to update preview
+    const event = new Event('change');
+    document.getElementById('car_id').dispatchEvent(event);
+    
+    // Highlight the selected car
+    document.querySelectorAll('.car-card').forEach(card => {
+        card.style.border = 'none';
+        card.style.boxShadow = '0 5px 25px rgba(0,0,0,0.1)';
+    });
+    event.target.closest('.car-card').style.border = '2px solid #2563eb';
+    event.target.closest('.car-card').style.boxShadow = '0 8px 30px rgba(37, 99, 235, 0.2)';
+    
+    // Go to step 1
+    showStep(1);
+}
+
+function setLocation(location) {
+    document.getElementById('pickup_location').value = location;
+}
+
+function showStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.booking-step').forEach(stepEl => {
+        stepEl.classList.remove('active');
+    });
+    
+    // Show current step
+    document.getElementById(`step${step}`).classList.add('active');
+    
+    // Update progress
+    document.querySelectorAll('.progress-step').forEach((stepEl, index) => {
+        if (index + 1 <= step) {
+            stepEl.classList.add('active');
+        } else {
+            stepEl.classList.remove('active');
+        }
+    });
+    
+    currentStep = step;
+    
+    // Update summary if on confirmation step
+    if (step === 4) {
+        updateBookingSummary();
+    }
+}
+
+function nextStep(next) {
+    if (validateStep(currentStep)) {
+        showStep(next);
+    }
+}
+
+function prevStep(prev) {
+    showStep(prev);
+}
+
+function validateStep(step) {
+    switch(step) {
+        case 1:
+            if (!document.getElementById('car_id').value) {
+                alert('Please select a car to continue.');
+                return false;
+            }
+            return true;
+            
+        case 2:
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const location = document.getElementById('pickup_location').value;
+            
+            if (!startDate || !endDate) {
+                alert('Please select both pickup and return dates.');
+                return false;
+            }
+            
+            if (!location) {
+                alert('Please enter a pickup location.');
+                return false;
+            }
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (start < today) {
+                alert('Pickup date cannot be in the past.');
+                return false;
+            }
+            
+            if (end <= start) {
+                alert('Return date must be after pickup date.');
+                return false;
+            }
+            
+            return true;
+            
+        case 3:
+            // Driver selection is optional, so always valid
+            return true;
+            
+        default:
+            return true;
+    }
+}
+
+function calculatePrice() {
+    const carSelect = document.getElementById('car_id');
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    const driverSelect = document.getElementById('driver_id');
+    
+    if (carSelect.value && startDate.value && endDate.value) {
+        const pricePerDay = parseFloat(carSelect.options[carSelect.selectedIndex].getAttribute('data-price'));
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+        const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        
+        let total = pricePerDay * days;
+        
+        // Add driver cost if selected
+        if (driverSelect.value) {
+            total += 50 * days;
+        }
+        
+        return {
+            days: days,
+            total: total,
+            carPrice: pricePerDay * days,
+            driverPrice: driverSelect.value ? 50 * days : 0
+        };
+    }
+    
+    return { days: 0, total: 0, carPrice: 0, driverPrice: 0 };
+}
+
+function updateBookingSummary() {
+    const calculation = calculatePrice();
+    const carSelect = document.getElementById('car_id');
+    const driverSelect = document.getElementById('driver_id');
+    
+    if (carSelect.value) {
+        const selectedCar = carSelect.options[carSelect.selectedIndex].text;
+        document.getElementById('summaryCar').textContent = selectedCar.split(' - ')[0];
+    }
+    
+    document.getElementById('summaryDates').textContent = `${calculation.days} days`;
+    document.getElementById('summaryLocation').textContent = document.getElementById('pickup_location').value;
+    
+    if (driverSelect.value) {
+        const selectedDriver = driverSelect.options[driverSelect.selectedIndex].text.split(' - ')[0];
+        document.getElementById('summaryDriver').textContent = selectedDriver;
+    } else {
+        document.getElementById('summaryDriver').textContent = 'Self-drive';
+    }
+    
+    document.getElementById('summaryTotal').textContent = `$${calculation.total.toFixed(2)}`;
+}
+
+// Event Listeners
+document.getElementById('car_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    
+    if (selectedOption.value) {
+        document.getElementById('carPreview').style.display = 'block';
+        document.getElementById('previewCarName').textContent = selectedOption.text.split(' - ')[0];
+        document.getElementById('previewSeats').textContent = selectedOption.getAttribute('data-seats');
+        document.getElementById('previewFuel').textContent = selectedOption.getAttribute('data-fuel');
+        document.getElementById('previewTransmission').textContent = selectedOption.getAttribute('data-transmission');
+        document.getElementById('previewPrice').textContent = `$${selectedOption.getAttribute('data-price')}/day`;
+    } else {
+        document.getElementById('carPreview').style.display = 'none';
+    }
+    
+    updateBookingSummary();
+});
+
+document.getElementById('driver_id').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    
+    if (selectedOption.value) {
+        document.getElementById('driverPreview').style.display = 'block';
+        document.getElementById('previewDriverName').textContent = selectedOption.text.split(' - ')[0];
+        document.getElementById('previewDriverExp').textContent = `${selectedOption.getAttribute('data-experience')} years experience`;
+    } else {
+        document.getElementById('driverPreview').style.display = 'none';
+    }
+    
+    updateBookingSummary();
+});
+
+document.getElementById('start_date').addEventListener('change', updateBookingSummary);
+document.getElementById('end_date').addEventListener('change', updateBookingSummary);
+
+// Set minimum dates
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('start_date').min = today;
+document.getElementById('end_date').min = today;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateBookingSummary();
+});
+</script>
+
+<style>
+.booking-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+}
+
+.progress-step::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: -50%;
+    width: 100%;
+    height: 3px;
+    background: #e9ecef;
+    z-index: 1;
+}
+
+.progress-step:first-child::before {
+    display: none;
+}
+
+.progress-step.active::before {
+    background: #2563eb;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e9ecef;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.progress-step.active .step-number {
+    background: #2563eb;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.progress-step.active .step-label {
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.booking-step {
+    display: none;
+}
+
+.booking-step.active {
+    display: block;
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.car-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.car-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+.car-card:hover .card-img-top {
+    transform: scale(1.05);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+}
+
+.form-select-lg, .form-control-lg {
+    border-radius: 10px !important;
+}
+
+#confirmBookingBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}

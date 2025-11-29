@@ -1,0 +1,577 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="section-title">Add New Driver</h1>
+                <p class="text-muted fs-5">Register a driver for your rental services</p>
+            </div>
+            
+            <div class="form-card">
+                <form method="POST" action="{{ url_for('add_driver') }}" id="addDriverForm">
+                    <!-- Personal Information -->
+                    <h4 class="fw-bold mb-4 text-primary">
+                        <i class="fas fa-id-card me-2"></i>Personal Information
+                    </h4>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label fw-semibold">
+                                <i class="fas fa-user me-2 text-primary"></i>Full Name *
+                            </label>
+                            <input type="text" class="form-control form-control-lg border-2" id="name" name="name" 
+                                   placeholder="Enter driver's full name" required 
+                                   oninput="validateName()"
+                                   style="background: #f8f9fa; border-radius: 10px;">
+                            <div class="form-text">Legal name as it appears on driver's license</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="license_number" class="form-label fw-semibold">
+                                <i class="fas fa-id-card me-2 text-primary"></i>License Number *
+                            </label>
+                            <input type="text" class="form-control form-control-lg border-2" id="license_number" name="license_number" 
+                                   placeholder="e.g., DL123456789" required 
+                                   oninput="validateLicense()"
+                                   style="background: #f8f9fa; border-radius: 10px;">
+                            <div class="form-text">Official driver's license number</div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <h4 class="fw-bold mb-4 text-primary mt-5">
+                        <i class="fas fa-address-book me-2"></i>Contact Information
+                    </h4>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label fw-semibold">
+                                <i class="fas fa-phone me-2 text-primary"></i>Phone Number *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-mobile-alt text-muted"></i>
+                                </span>
+                                <input type="tel" class="form-control form-control-lg border-start-0" 
+                                       id="phone" name="phone" 
+                                       placeholder="+1 (555) 123-4567" required 
+                                       oninput="formatPhoneNumber()"
+                                       style="border-radius: 0 10px 10px 0;">
+                            </div>
+                            <div class="form-text">Primary contact number</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label fw-semibold">
+                                <i class="fas fa-envelope me-2 text-primary"></i>Email Address
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-at text-muted"></i>
+                                </span>
+                                <input type="email" class="form-control form-control-lg border-start-0" 
+                                       id="email" name="email" 
+                                       placeholder="driver@email.com"
+                                       oninput="validateEmail()"
+                                       style="border-radius: 0 10px 10px 0;">
+                            </div>
+                            <div class="form-text">Optional - for official communications</div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Details -->
+                    <h4 class="fw-bold mb-4 text-primary mt-5">
+                        <i class="fas fa-briefcase me-2"></i>Professional Details
+                    </h4>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="experience" class="form-label fw-semibold">
+                                <i class="fas fa-road me-2 text-primary"></i>Driving Experience (years) *
+                            </label>
+                            <select class="form-select form-select-lg border-2" id="experience" name="experience" required 
+                                    onchange="validateExperience()">
+                                <option value="">Select years of experience...</option>
+                                {% for years in range(1, 51) %}
+                                <option value="{{ years }}">{{ years }} year{% if years != 1 %}s{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Total professional driving experience</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="license_type" class="form-label fw-semibold">
+                                <i class="fas fa-file-alt me-2 text-primary"></i>License Type *
+                            </label>
+                            <select class="form-select form-select-lg border-2" id="license_type" name="license_type" required 
+                                    onchange="validateLicenseType()">
+                                <option value="">Select license type...</option>
+                                <option value="Class C - Regular Passenger">Class C - Regular Passenger</option>
+                                <option value="Class B - Commercial Light">Class B - Commercial Light</option>
+                                <option value="Class A - Commercial Heavy">Class A - Commercial Heavy</option>
+                                <option value="Chauffeur License">Chauffeur License</option>
+                                <option value="International License">International License</option>
+                            </select>
+                            <div class="form-text">Type of driver's license</div>
+                        </div>
+                    </div>
+
+                    <!-- License Expiry -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="license_expiry" class="form-label fw-semibold">
+                                <i class="fas fa-calendar-times me-2 text-primary"></i>License Expiry Date *
+                            </label>
+                            <input type="date" class="form-control form-control-lg border-2" id="license_expiry" name="license_expiry" 
+                                   required onchange="validateLicenseExpiry()"
+                                   style="background: #f8f9fa; border-radius: 10px;">
+                            <div class="form-text">License expiration date</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-car-side me-2 text-primary"></i>Vehicle Types *
+                            </label>
+                            <div class="vehicle-types-container border-2 rounded-3 p-3" 
+                                 style="background: #f8f9fa; border-radius: 10px; max-height: 150px; overflow-y: auto;">
+                                {% for vehicle_type in ['Sedan', 'SUV', 'Luxury', 'Van/Minivan', 'Truck', 'Electric', 'Hybrid'] %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="vehicle_types" 
+                                           id="vehicle_{{ vehicle_type|lower }}" value="{{ vehicle_type }}">
+                                    <label class="form-check-label" for="vehicle_{{ vehicle_type|lower }}">
+                                        {{ vehicle_type }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">Select all vehicle types the driver can operate</div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Skills -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-star me-2 text-primary"></i>Additional Skills & Languages
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="skill_defensive" name="skills" value="Defensive Driving">
+                                    <label class="form-check-label" for="skill_defensive">
+                                        <i class="fas fa-shield-alt me-2 text-success"></i>Defensive Driving Certified
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="skill_first_aid" name="skills" value="First Aid">
+                                    <label class="form-check-label" for="skill_first_aid">
+                                        <i class="fas fa-first-aid me-2 text-danger"></i>First Aid Certified
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="skill_navigation" name="skills" value="Expert Navigation">
+                                    <label class="form-check-label" for="skill_navigation">
+                                        <i class="fas fa-map me-2 text-info"></i>Expert Navigation
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="language_english" name="languages" value="English" checked>
+                                    <label class="form-check-label" for="language_english">
+                                        <i class="fas fa-language me-2 text-primary"></i>English
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="language_spanish" name="languages" value="Spanish">
+                                    <label class="form-check-label" for="language_spanish">
+                                        <i class="fas fa-language me-2 text-warning"></i>Spanish
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="language_french" name="languages" value="French">
+                                    <label class="form-check-label" for="language_french">
+                                        <i class="fas fa-language me-2 text-info"></i>French
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Availability & Rates -->
+                    <h4 class="fw-bold mb-4 text-primary mt-5">
+                        <i class="fas fa-clock me-2"></i>Availability & Rates
+                    </h4>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Availability Schedule *</label>
+                            <div class="availability-days border-2 rounded-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
+                                {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="availability" 
+                                           id="day_{{ day.lower() }}" value="{{ day }}" checked>
+                                    <label class="form-check-label" for="day_{{ day.lower() }}">
+                                        {{ day }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text">Days when driver is typically available</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="hourly_rate" class="form-label fw-semibold">
+                                <i class="fas fa-money-bill-wave me-2 text-primary"></i>Hourly Rate ($) *
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">$</span>
+                                <input type="number" class="form-control form-control-lg border-start-0" 
+                                       id="hourly_rate" name="hourly_rate" 
+                                       min="15" max="100" step="5" value="25" required
+                                       oninput="validateHourlyRate()"
+                                       style="border-radius: 0 10px 10px 0;">
+                                <span class="input-group-text bg-light border-start-0">/hour</span>
+                            </div>
+                            <div class="form-text">Standard hourly rate for driver services</div>
+                        </div>
+                    </div>
+
+                    <!-- Service Areas -->
+                    <div class="mb-4">
+                        <label for="service_areas" class="form-label fw-semibold">
+                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>Service Areas
+                        </label>
+                        <textarea class="form-control form-control-lg border-2" id="service_areas" name="service_areas" 
+                                  rows="3" placeholder="List areas where driver provides service (e.g., Downtown, Airport, City Center)..."
+                                  style="background: #f8f9fa; border-radius: 10px; resize: none;"></textarea>
+                        <div class="form-text">Specify geographic areas served by this driver</div>
+                    </div>
+
+                    <!-- Emergency Contact -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Emergency Contact
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control form-control-lg border-2 mb-2" 
+                                       id="emergency_contact_name" name="emergency_contact_name" 
+                                       placeholder="Emergency contact name"
+                                       style="background: #f8f9fa; border-radius: 10px;">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="tel" class="form-control form-control-lg border-2" 
+                                       id="emergency_contact_phone" name="emergency_contact_phone" 
+                                       placeholder="Emergency contact phone"
+                                       style="background: #f8f9fa; border-radius: 10px;">
+                            </div>
+                        </div>
+                        <div class="form-text">Optional - for emergency situations only</div>
+                    </div>
+
+                    <!-- Availability Toggle -->
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="available" name="available" checked 
+                                   style="transform: scale(1.3);">
+                            <label class="form-check-label fw-semibold" for="available">
+                                <i class="fas fa-check-circle me-2 text-success"></i>
+                                Make driver available for assignments immediately
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="driver_terms" required>
+                            <label class="form-check-label text-muted" for="driver_terms">
+                                I confirm that all information provided is accurate and the driver has valid documentation. 
+                                I agree to the <a href="#" class="text-primary text-decoration-none">driver agreement terms</a> 
+                                and understand my responsibilities as the driver's employer.
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-semibold" id="submitBtn">
+                        <i class="fas fa-user-plus me-2"></i>Add Driver to Team
+                    </button>
+                </form>
+            </div>
+
+            <!-- Requirements Section -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card border-0 bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">
+                                <i class="fas fa-clipboard-list me-2 text-primary"></i>Driver Requirements
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Valid driver's license
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Clean driving record
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Minimum 1 year experience
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Background check clearance
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Professional appearance
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Good communication skills
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function validateName() {
+    const name = document.getElementById('name');
+    const isValid = name.value.length >= 2 && name.value.split(' ').length >= 2;
+    name.classList.toggle('is-valid', isValid && name.value !== '');
+    name.classList.toggle('is-invalid', !isValid && name.value !== '');
+    updateSubmitButton();
+    return isValid;
+}
+
+function validateLicense() {
+    const license = document.getElementById('license_number');
+    const isValid = license.value.length >= 5;
+    license.classList.toggle('is-valid', isValid && license.value !== '');
+    license.classList.toggle('is-invalid', !isValid && license.value !== '');
+    updateSubmitButton();
+    return isValid;
+}
+
+function validateExperience() {
+    const experience = document.getElementById('experience');
+    const isValid = experience.value !== '';
+    experience.classList.toggle('is-valid', isValid);
+    experience.classList.toggle('is-invalid', !isValid);
+    updateSubmitButton();
+    return isValid;
+}
+
+function validateLicenseType() {
+    const licenseType = document.getElementById('license_type');
+    const isValid = licenseType.value !== '';
+    licenseType.classList.toggle('is-valid', isValid);
+    licenseType.classList.toggle('is-invalid', !isValid);
+    updateSubmitButton();
+    return isValid;
+}
+
+function validateLicenseExpiry() {
+    const expiry = document.getElementById('license_expiry');
+    const today = new Date().toISOString().split('T')[0];
+    const isValid = expiry.value > today;
+    expiry.classList.toggle('is-valid', isValid && expiry.value !== '');
+    expiry.classList.toggle('is-invalid', !isValid && expiry.value !== '');
+    updateSubmitButton();
+    
+    if (!isValid && expiry.value) {
+        alert('License expiry date must be in the future.');
+    }
+    return isValid;
+}
+
+function validateVehicleTypes() {
+    const vehicleCheckboxes = document.querySelectorAll('input[name="vehicle_types"]:checked');
+    const isValid = vehicleCheckboxes.length > 0;
+    
+    const container = document.querySelector('.vehicle-types-container');
+    container.classList.toggle('is-valid', isValid);
+    container.classList.toggle('is-invalid', !isValid);
+    updateSubmitButton();
+    return isValid;
+}
+
+function validateEmail() {
+    const email = document.getElementById('email');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isValid = email.value === '' || emailRegex.test(email.value);
+    email.classList.toggle('is-valid', isValid && email.value !== '');
+    email.classList.toggle('is-invalid', !isValid && email.value !== '');
+    return isValid;
+}
+
+function validateHourlyRate() {
+    const rate = document.getElementById('hourly_rate');
+    const isValid = rate.value >= 15 && rate.value <= 100;
+    rate.classList.toggle('is-valid', isValid);
+    rate.classList.toggle('is-invalid', !isValid);
+    updateSubmitButton();
+    return isValid;
+}
+
+function formatPhoneNumber() {
+    const phoneInput = document.getElementById('phone');
+    let value = phoneInput.value.replace(/\D/g, '');
+    
+    if (value.length > 0) {
+        if (value.length <= 3) {
+            value = value;
+        } else if (value.length <= 6) {
+            value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
+        } else {
+            value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
+        }
+    }
+    
+    phoneInput.value = value;
+    
+    // Validate phone
+    const phoneDigits = phoneInput.value.replace(/\D/g, '');
+    const isValid = phoneDigits.length === 10;
+    phoneInput.classList.toggle('is-valid', isValid && phoneInput.value !== '');
+    phoneInput.classList.toggle('is-invalid', !isValid && phoneInput.value !== '');
+    updateSubmitButton();
+    return isValid;
+}
+
+function updateSubmitButton() {
+    const nameValid = validateName();
+    const licenseValid = validateLicense();
+    const experienceValid = validateExperience();
+    const licenseTypeValid = validateLicenseType();
+    const licenseExpiryValid = validateLicenseExpiry();
+    const vehicleTypesValid = validateVehicleTypes();
+    const hourlyRateValid = validateHourlyRate();
+    const phoneValid = formatPhoneNumber();
+    const termsChecked = document.getElementById('driver_terms').checked;
+    
+    const allValid = nameValid && licenseValid && experienceValid && licenseTypeValid && 
+                    licenseExpiryValid && vehicleTypesValid && hourlyRateValid && phoneValid && termsChecked;
+    
+    document.getElementById('submitBtn').disabled = !allValid;
+}
+
+// Initialize validation
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners for real-time validation
+    document.getElementById('name').addEventListener('input', validateName);
+    document.getElementById('license_number').addEventListener('input', validateLicense);
+    document.getElementById('experience').addEventListener('change', validateExperience);
+    document.getElementById('license_type').addEventListener('change', validateLicenseType);
+    document.getElementById('license_expiry').addEventListener('change', validateLicenseExpiry);
+    document.getElementById('hourly_rate').addEventListener('input', validateHourlyRate);
+    document.getElementById('phone').addEventListener('input', formatPhoneNumber);
+    document.getElementById('driver_terms').addEventListener('change', updateSubmitButton);
+    
+    // Add event listeners for vehicle types
+    document.querySelectorAll('input[name="vehicle_types"]').forEach(checkbox => {
+        checkbox.addEventListener('change', validateVehicleTypes);
+    });
+    
+    // Add event listeners for availability
+    document.querySelectorAll('input[name="availability"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const availabilityCheckboxes = document.querySelectorAll('input[name="availability"]:checked');
+            const isValid = availabilityCheckboxes.length > 0;
+            document.querySelector('.availability-days').classList.toggle('is-valid', isValid);
+            document.querySelector('.availability-days').classList.toggle('is-invalid', !isValid);
+        });
+    });
+    
+    // Set minimum date for license expiry to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('license_expiry').min = today;
+    
+    // Initial validation
+    updateSubmitButton();
+});
+
+// Form submission
+document.getElementById('addDriverForm').addEventListener('submit', function(e) {
+    if (!document.getElementById('driver_terms').checked) {
+        e.preventDefault();
+        alert('Please agree to the terms and conditions.');
+        return;
+    }
+    
+    // Final validation
+    updateSubmitButton();
+    if (document.getElementById('submitBtn').disabled) {
+        e.preventDefault();
+        alert('Please fill in all required fields correctly.');
+    }
+});
+</script>
+
+<style>
+.form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.vehicle-types-container, .availability-days {
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.vehicle-types-container.is-valid, .availability-days.is-valid {
+    border-color: #198754 !important;
+    background: #f8fff9 !important;
+}
+
+.vehicle-types-container.is-invalid, .availability-days.is-invalid {
+    border-color: #dc3545 !important;
+    background: #fff8f8 !important;
+}
+
+.form-check-input:checked {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.is-valid {
+    border-color: #198754 !important;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.input-group-text {
+    border-radius: 10px 0 0 10px !important;
+}
+
+.form-control {
+    border-radius: 0 10px 10px 0 !important;
+}
+
+#submitBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}
